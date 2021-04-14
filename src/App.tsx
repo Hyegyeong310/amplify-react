@@ -1,24 +1,43 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectTodos } from './store/todo';
+import { addTodo, toggleTodo } from './store/todo/reducer';
 
 function App() {
+  const dispatch = useDispatch();
+  const todoList = useSelector(selectTodos);
+  const [value, setValue] = useState('');
+
+  const onChangeValue = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setValue(value);
+  }
+
+  const onSubmitAddTodo = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!value.trim()) {
+      setValue('');
+      return;
+    }
+    const id = todoList.length ? Math.max(...todoList.map(todo => parseInt(todo.id, 10))) : 0;
+    dispatch(addTodo({id: `${id+1}`, text: value}));
+    setValue('');
+  }
+
+  const onClickToggleTodo = (id: string) => {
+    dispatch(toggleTodo(id))
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <form onSubmit={onSubmitAddTodo}>
+        <input type="text" value={value} onChange={onChangeValue} />
+        <button type="submit">Add</button>
+      </form>
+      <br />
+      <ul className="todo">
+        {todoList.map(({id, text, completed}) => <li key={id} className={`todo--item ${completed ? 'completed' : ''}`} onClick={() => onClickToggleTodo(id)}><span>{text}</span> {completed ? '✅' : '❌'}</li>)}
+      </ul>
     </div>
   );
 }
